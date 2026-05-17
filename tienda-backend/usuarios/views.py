@@ -41,14 +41,19 @@ def login(request):
             {'error': 'Usuario inactivo'},
             status=status.HTTP_403_FORBIDDEN
         )
-
-    # Generar tokens JWT manualmente con el id del usuario
+    
+    from django.contrib.auth.models import User as DjangoUser
     try:
-        usuario_obj = Usuario.objects.get(id=usuario_id)
-    except Usuario.DoesNotExist:
-        return Response({'error': 'Usuario no encontrado'}, status=404)
+        django_user = DjangoUser.objects.get(username=email)
+    except DjangoUser.DoesNotExist:
+        django_user = DjangoUser.objects.create_user(
+            username=email,
+            email=email,
+            password=password
 
-    refresh = RefreshToken.for_user(usuario_obj)
+        )
+
+    refresh = RefreshToken.for_user(django_user)
 
     return Response({
         'access':  str(refresh.access_token),
