@@ -1,29 +1,110 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, Search, Edit2, Trash2 } from 'lucide-react'
-import type { Producto } from '../types'
-const productosDemo: Producto[] = [
-  { id: 1, nombre: 'Coca-Cola 600ml',    precio: 18,   stock: 142, descripcion: 'Botella PET',     categoria: 'Bebidas',  activo: true },
-  { id: 2, nombre: 'Sabritas orig. 45g', precio: 16.5, stock: 8,   descripcion: 'Papas fritas',    categoria: 'Botanas',  activo: true },
-  { id: 3, nombre: 'Agua mineral 1L',    precio: 12,   stock: 95,  descripcion: 'Agua con gas',    categoria: 'Bebidas',  activo: true },
-  { id: 4, nombre: 'Pan Bimbo blanco',   precio: 45,   stock: 34,  descripcion: 'Pan de caja',     categoria: 'Abarrotes',activo: true },
-  { id: 5, nombre: 'Leche Lala 1L',      precio: 28,   stock: 22,  descripcion: 'Leche entera',    categoria: 'Lácteos',  activo: true },
-]
+import cliente from '../api/cliente'
+import toast from 'react-hot-toast'
 
-const categorias = ['Todas', 'Bebidas', 'Botanas', 'Abarrotes', 'Lácteos']
+interface Producto {
+  id:              number
+  nombre:          string
+  precio:          string
+  stock:           number
+  descripcion:     string
+  categoria:       number
+  categoria_nombre:string
+  activo:          boolean
+}
+
+interface Categoria {
+  id:     number
+  nombre: string
+}
+
+const productoVacio = {
+  nombre: '', precio: '', stock: 0,
+  descripcion: '', categoria: 1
+}
 
 export default function Productos() {
-  const [busqueda, setBusqueda]   = useState('')
-  const [categoria, setCategoria] = useState('Todas')
-  const [showModal, setShowModal] = useState(false)
-  const [editando, setEditando]   = useState<Producto | null>(null)
+  const [productos,   setProductos]   = useState<Producto[]>([])
+  const [categorias,  setCategorias]  = useState<Categoria[]>([])
+  const [busqueda,    setBusqueda]    = useState('')
+  const [categoria,   setCategoria]   = useState('Todas')
+  const [showModal,   setShowModal]   = useState(false)
+  const [editando,    setEditando]    = useState<Producto | null>(null)
+  const [form,        setForm]        = useState(productoVacio)
+  const [loading,     setLoading]     = useState(true)
+  const [guardando,   setGuardando]   = useState(false)
 
-  const filtrados = productosDemo.filter(p => {
+  const cargarDatos = () => {
+    setLoading(true)
+    Promise.all([
+      cliente.get('/productos/'),
+      cliente.get('/categorias/'),
+    ]).then(([prodRes, catRes]) => {
+      setProductos(prodRes.data.results ?? prodRes.data)
+      setCategorias(catRes.data.results ?? catRes.data)
+    }).catch(() => toast.error('Error al cargar productos'))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => { cargarDatos() }, [])
+
+  const abrirModal = (p: Producto | null) => {
+    setEditando(p)
+    setForm(p
+      ? { nombre: p.nombre, precio: p.precio, stock: p.stock, descripcion: p.descripcion ?? '', categoria: p.categoria }
+      : productoVacio
+    )
+    setShowModal(true)
+  }
+
+  const cerrarModal = () => { setShowModal(false); setEditando(null) }
+
+  const guardar = async () => {
+    if (!form.nombre || !form.precio) {
+      toast.error('Nombre y precio son obligatorios')
+      return
+    }
+    setGuardando(true)
+    try {
+      if (editando) {
+        await cliente.put(`/productos/${editando.id}/`, form)
+        toast.success('Producto actualizado')
+      } else {
+        await cliente.post('/productos/', form)
+        toast.success('Producto creado')
+      }
+      cerrarModal()
+      cargarDatos()
+    } catch {
+      toast.error('Error al guardar el producto')
+    } finally {
+      setGuardando(false)
+    }
+  }
+
+  const eliminar = async (id: number) => {
+    if (!confirm('¿Eliminar este producto?')) return
+    try {
+      await cliente.delete(`/productos/${id}/`)
+      toast.success('Producto eliminado')
+      cargarDatos()
+    } catch {
+      toast.error('Error al eliminar')
+    }
+  }
+
+  const filtrados = productos.filter(p => {
     const coincideNombre = p.nombre.toLowerCase().includes(busqueda.toLowerCase())
-    const coincideCat    = categoria === 'Todas' || p.categoria === categoria
+    const coincideCat    = categoria === 'Todas' || p.categoria_nombre === categoria
     return coincideNombre && coincideCat
   })
 
-  const abrirModal = (p: Producto | null) => { setEditando(p); setShowModal(true) }
+  if (loading) return (
+    <div className="d-flex justify-content-center align-items-center" style={{ height: 300 }}>
+      <div className="spinner-border text-primary" />
+    </div>
+  )
 
   return (
     <div>
@@ -52,7 +133,8 @@ export default function Productos() {
             <div className="col-6 col-md-3">
               <select className="form-select form-select-sm"
                 value={categoria} onChange={e => setCategoria(e.target.value)}>
-                {categorias.map(c => <option key={c}>{c}</option>)}
+                <option>Todas</option>
+                {categorias.map(c => <option key={c.id}>{c.nombre}</option>)}
               </select>
             </div>
             <div className="col-6 col-md-2">
@@ -83,8 +165,8 @@ export default function Productos() {
                       <span className="fw-medium">{p.nombre}</span>
                       <br /><small className="text-muted">{p.descripcion}</small>
                     </td>
-                    <td><span className="badge bg-secondary-subtle text-secondary">{p.categoria}</span></td>
-                    <td>${p.precio.toFixed(2)}</td>
+                    <td><span className="badge-pastel-blue">{p.categoria_nombre}</span></td>
+                    <td>${Number(p.precio).toFixed(2)}</td>
                     <td>
                       <span className={p.stock < 10 ? 'text-warning fw-medium' : 'text-success fw-medium'}>
                         {p.stock}
@@ -97,7 +179,8 @@ export default function Productos() {
                           onClick={() => abrirModal(p)}>
                           <Edit2 size={13} />
                         </button>
-                        <button className="btn btn-outline-danger btn-sm">
+                        <button className="btn btn-outline-danger btn-sm"
+                          onClick={() => eliminar(p.id)}>
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -107,22 +190,10 @@ export default function Productos() {
               </tbody>
             </table>
           </div>
-          {/* Paginación */}
-          <div className="d-flex justify-content-between align-items-center px-3 py-2 border-top">
-            <small className="text-muted">Mostrando {filtrados.length} resultados</small>
-            <nav>
-              <ul className="pagination pagination-sm mb-0">
-                <li className="page-item disabled"><a className="page-link">‹</a></li>
-                <li className="page-item active"><a className="page-link">1</a></li>
-                <li className="page-item"><a className="page-link">2</a></li>
-                <li className="page-item"><a className="page-link">›</a></li>
-              </ul>
-            </nav>
-          </div>
         </div>
       </div>
 
-      {/* Modal crear/editar */}
+      {/* Modal */}
       {showModal && (
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
           <div className="modal-dialog modal-dialog-centered">
@@ -131,45 +202,53 @@ export default function Productos() {
                 <h6 className="modal-title fw-semibold">
                   {editando ? 'Editar producto' : 'Nuevo producto'}
                 </h6>
-                <button className="btn-close" onClick={() => setShowModal(false)} />
+                <button className="btn-close" onClick={cerrarModal} />
               </div>
               <div className="modal-body">
                 <div className="mb-3">
                   <label className="form-label small">Nombre</label>
                   <input className="form-control form-control-sm"
-                    defaultValue={editando?.nombre} placeholder="Nombre del producto" />
+                    value={form.nombre}
+                    onChange={e => setForm({ ...form, nombre: e.target.value })}
+                    placeholder="Nombre del producto" />
                 </div>
                 <div className="row g-2 mb-3">
                   <div className="col-6">
                     <label className="form-label small">Precio ($)</label>
                     <input type="number" className="form-control form-control-sm"
-                      defaultValue={editando?.precio} placeholder="0.00" step="0.01" />
+                      value={form.precio} step="0.01"
+                      onChange={e => setForm({ ...form, precio: e.target.value })} />
                   </div>
                   <div className="col-6">
                     <label className="form-label small">Stock</label>
                     <input type="number" className="form-control form-control-sm"
-                      defaultValue={editando?.stock} placeholder="0" />
+                      value={form.stock}
+                      onChange={e => setForm({ ...form, stock: Number(e.target.value) })} />
                   </div>
                 </div>
                 <div className="mb-3">
                   <label className="form-label small">Categoría</label>
-                  <select className="form-select form-select-sm">
-                    {categorias.filter(c => c !== 'Todas').map(c => (
-                      <option key={c} selected={editando?.categoria === c}>{c}</option>
+                  <select className="form-select form-select-sm"
+                    value={form.categoria}
+                    onChange={e => setForm({ ...form, categoria: Number(e.target.value) })}>
+                    {categorias.map(c => (
+                      <option key={c.id} value={c.id}>{c.nombre}</option>
                     ))}
                   </select>
                 </div>
                 <div className="mb-3">
                   <label className="form-label small">Descripción</label>
                   <textarea className="form-control form-control-sm" rows={2}
-                    defaultValue={editando?.descripcion} />
+                    value={form.descripcion}
+                    onChange={e => setForm({ ...form, descripcion: e.target.value })} />
                 </div>
               </div>
               <div className="modal-footer">
                 <button className="btn btn-outline-secondary btn-sm"
-                  onClick={() => setShowModal(false)}>Cancelar</button>
-                <button className="btn btn-dark btn-sm">
-                  {editando ? 'Guardar cambios' : 'Crear producto'}
+                  onClick={cerrarModal}>Cancelar</button>
+                <button className="btn btn-dark btn-sm"
+                  onClick={guardar} disabled={guardando}>
+                  {guardando ? 'Guardando...' : editando ? 'Guardar cambios' : 'Crear producto'}
                 </button>
               </div>
             </div>

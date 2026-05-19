@@ -1,11 +1,11 @@
-import { createContext, useContext, useState} from 'react'
+import { createContext, useContext, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Usuario } from '../types'
 
 interface AuthContextType {
   usuario: Usuario | null
-  login: (token: string, usuario: Usuario) => void
-  logout: () => void
+  login:   (token: string, refresh: string, usuario: Usuario) => void
+  logout:  () => void
 }
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
@@ -16,9 +16,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return guardado ? JSON.parse(guardado) : null
   })
 
-  const login = (token: string, usuario: Usuario) => {
-    localStorage.setItem('access_token', token)
-    localStorage.setItem('usuario', JSON.stringify(usuario))
+  const login = (token: string, refresh: string, usuario: Usuario) => {
+    localStorage.setItem('access_token',  token)
+    localStorage.setItem('refresh_token', refresh)
+    localStorage.setItem('usuario',       JSON.stringify(usuario))
     setUsuario(usuario)
   }
 
