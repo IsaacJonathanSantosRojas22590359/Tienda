@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Plus, Edit2, UserX, UserCheck } from 'lucide-react'
+import { Plus, Edit2, UserX} from 'lucide-react'
 import cliente from '../api/cliente'
 import toast from 'react-hot-toast'
 

@@ -137,54 +137,62 @@ export default function Ventas() {
 
         {/* Carrito */}
         <div className="col-12 col-lg-5">
-          <div className="card h-100">
-            <div className="card-body d-flex flex-column">
-              <h6 className="fw-semibold mb-3">
+          <div className="card" style={{ height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
+            <div className="card-body d-flex flex-column" style={{ overflow: 'hidden', padding: '1rem' }}>
+
+              {/* Título */}
+              <h6 className="fw-semibold mb-3" style={{ flexShrink: 0 }}>
                 Carrito
                 <span className="badge-pastel-blue ms-2">
                   {carrito.reduce((s, d) => s + d.cantidad, 0)} items
                 </span>
               </h6>
 
-              {carrito.length === 0 ? (
-                <p className="text-muted small text-center py-4">
-                  Agrega productos desde la lista
-                </p>
-              ) : (
-                <div className="d-flex flex-column gap-2 mb-3">
-                  {carrito.map(d => (
-                    <div key={d.producto.id} className="d-flex align-items-center gap-2">
-                      <span className="flex-grow-1" style={{ fontSize: 13 }}>
-                        {d.producto.nombre}
-                      </span>
-                      <div className="d-flex align-items-center gap-1">
-                        <button className="btn btn-outline-secondary btn-sm p-0"
-                          style={{ width: 22, height: 22, borderRadius: '50%' }}
-                          onClick={() => cambiarCantidad(d.producto.id, -1)}>
-                          <Minus size={11} />
-                        </button>
-                        <span style={{ fontSize: 13, fontWeight: 600, minWidth: 20, textAlign: 'center' }}>
-                          {d.cantidad}
+              {/* Lista de productos */}
+              <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                {carrito.length === 0 ? (
+                  <p className="text-muted small text-center py-4">
+                    Agrega productos desde la lista
+                  </p>
+                ) : (
+                  <div className="d-flex flex-column gap-2 pb-2">
+                    {carrito.map(d => (
+                      <div key={d.producto.id}
+                        className="d-flex align-items-center gap-2"
+                        style={{ textAlign: 'left' }}>
+                        <span className="flex-grow-1 text-start" style={{ fontSize: 13 }}>
+                          {d.producto.nombre}
                         </span>
-                        <button className="btn btn-outline-secondary btn-sm p-0"
-                          style={{ width: 22, height: 22, borderRadius: '50%' }}
-                          onClick={() => cambiarCantidad(d.producto.id, 1)}>
-                          <Plus size={11} />
+                        <div className="d-flex align-items-center gap-1">
+                          <button className="btn btn-outline-secondary btn-sm p-0"
+                            style={{ width: 22, height: 22, borderRadius: '50%' }}
+                            onClick={() => cambiarCantidad(d.producto.id, -1)}>
+                            <Minus size={11} />
+                          </button>
+                          <span style={{ fontSize: 13, fontWeight: 600, minWidth: 20, textAlign: 'center' }}>
+                            {d.cantidad}
+                          </span>
+                          <button className="btn btn-outline-secondary btn-sm p-0"
+                            style={{ width: 22, height: 22, borderRadius: '50%' }}
+                            onClick={() => cambiarCantidad(d.producto.id, 1)}>
+                            <Plus size={11} />
+                          </button>
+                        </div>
+                        <span style={{ fontSize: 13, fontWeight: 600, minWidth: 56, textAlign: 'right' }}>
+                          ${d.subtotal.toFixed(2)}
+                        </span>
+                        <button className="btn btn-link btn-sm p-0 text-danger"
+                          onClick={() => setCarrito(c => c.filter(x => x.producto.id !== d.producto.id))}>
+                          <Trash2 size={13} />
                         </button>
                       </div>
-                      <span style={{ fontSize: 13, fontWeight: 600, minWidth: 56, textAlign: 'right' }}>
-                        ${d.subtotal.toFixed(2)}
-                      </span>
-                      <button className="btn btn-link btn-sm p-0 text-danger"
-                        onClick={() => setCarrito(c => c.filter(x => x.producto.id !== d.producto.id))}>
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              <div className="border-top pt-3 mt-auto">
+              {/* Parte inferior */}
+              <div style={{ flexShrink: 0, borderTop: '1px solid #e2e8f0', paddingTop: '0.75rem', marginTop: '0.5rem' }}>
                 <div className="d-flex justify-content-between mb-3"
                   style={{ fontSize: 16, fontWeight: 700 }}>
                   <span>Total</span>
@@ -199,19 +207,28 @@ export default function Ventas() {
                   </button>
                 ) : ventaData && (
                   <>
-                    {/* Ticket */}
-                    <div className="bg-light rounded p-3 mb-3" style={{ fontSize: 12 }}>
+                    {/* Ticket con scroll por si hay muchos productos insanos */}
+                    <div style={{
+                      background: '#f8faff', borderRadius: 10,
+                      padding: 10, fontSize: 12, marginBottom: 10,
+                      maxHeight: 220, overflowY: 'auto'
+                    }}>
                       <div className="text-center mb-2">
-                        <p className="fw-semibold mb-0" style={{ fontSize: 13 }}>Tienda Familiar</p>
+                        <p className="fw-semibold mb-0" style={{ fontSize: 13 }}>
+                          Tienda Familiar
+                        </p>
                         <p className="text-muted mb-0">
                           Ticket #{ventaData.id} · {new Date(ventaData.fecha).toLocaleString('es-MX')}
                         </p>
-                        <p className="text-muted mb-0">Atendió: {ventaData.usuario_nombre}</p>
+                        <p className="text-muted mb-0">
+                          Atendió: {ventaData.usuario_nombre}
+                        </p>
                       </div>
-                      <table className="table table-sm table-borderless mb-1" style={{ fontSize: 11 }}>
+                      <table className="table table-sm table-borderless mb-1"
+                        style={{ fontSize: 11 }}>
                         <thead>
                           <tr>
-                            <th>Producto</th>
+                            <th className="text-start">Producto</th>
                             <th className="text-center">Cant.</th>
                             <th className="text-end">Subtotal</th>
                           </tr>
@@ -219,7 +236,7 @@ export default function Ventas() {
                         <tbody>
                           {ventaData.detalles.map((d: any) => (
                             <tr key={d.id}>
-                              <td>{d.producto_nombre}</td>
+                              <td className="text-start">{d.producto_nombre}</td>
                               <td className="text-center">{d.cantidad}</td>
                               <td className="text-end">${Number(d.subtotal).toFixed(2)}</td>
                             </tr>
@@ -231,9 +248,25 @@ export default function Ventas() {
                         <span>${Number(ventaData.total).toFixed(2)}</span>
                       </div>
                     </div>
+
+                    {/* Botones */}
                     <div className="d-flex gap-2">
-                      <button className="btn btn-outline-danger btn-sm flex-grow-1">
-                        <FileText size={13} className="me-1" />PDF
+                      <button
+                        className="btn btn-outline-danger btn-sm flex-grow-1"
+                        onClick={() => {
+                          const token = localStorage.getItem('access_token')
+                          const url   = `${import.meta.env.VITE_API_URL}/ventas/${ventaData.id}/ticket/`
+                          fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+                            .then(res => res.blob())
+                            .then(blob => {
+                              const link    = document.createElement('a')
+                              link.href     = URL.createObjectURL(blob)
+                              link.download = `ticket_${ventaData.id}.pdf`
+                              link.click()
+                            })
+                            .catch(() => toast.error('Error al generar el ticket'))
+                        }}>
+                        <FileText size={13} className="me-1" /> PDF
                       </button>
                       <button className="btn btn-outline-secondary btn-sm flex-grow-1"
                         onClick={nuevaVenta}>

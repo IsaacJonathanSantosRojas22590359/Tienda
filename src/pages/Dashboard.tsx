@@ -40,7 +40,7 @@ export default function Dashboard() {
     { label: 'Ingresos del mes',   valor: `$${data.ingresos_mes.toLocaleString()}`, icono: <BarChart2 size={20} />, cls: 'metric-card-blue',   iconColor: '#1d4ed8' },
     { label: 'Ventas realizadas',  valor: data.ventas_mes,                           icono: <ShoppingCart size={20} />, cls: 'metric-card-green',  iconColor: '#15803d' },
     { label: 'Productos en stock', valor: data.total_stock,                           icono: <Package size={20} />,      cls: 'metric-card-yellow', iconColor: '#a16207',
-      extra: data.stock_bajo > 0 ? `⚠ ${data.stock_bajo} con stock bajo` : 'Todo en orden' },
+      extra: data.stock_bajo > 0 ? `${data.stock_bajo} con stock bajo` : 'Todo en orden' },
     { label: 'Empleados activos',  valor: data.empleados,                             icono: <Users size={20} />,        cls: 'metric-card-purple', iconColor: '#7c3aed' },
   ]
 
