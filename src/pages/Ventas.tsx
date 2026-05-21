@@ -98,39 +98,57 @@ export default function Ventas() {
       <div className="row g-3">
         {/* Lista de productos */}
         <div className="col-12 col-lg-7">
-          <div className="card h-100">
-            <div className="card-body">
-              <h6 className="fw-semibold mb-3">Productos disponibles</h6>
-              <div className="input-group input-group-sm mb-3">
-                <span className="input-group-text"><Search size={14} /></span>
-                <input className="form-control" placeholder="Buscar producto..."
-                  value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+          <div className="card" style={{ height: 'calc(100vh - 140px)', display: 'flex', flexDirection: 'column' }}>
+            <div className="card-body d-flex flex-column" style={{ overflow: 'hidden', padding: '1rem' }}>
+
+              {/* Título y buscador */}
+              <div style={{ flexShrink: 0 }}>
+                <h6 className="fw-semibold mb-3">Productos disponibles</h6>
+                <div className="input-group input-group-sm mb-3">
+                  <span className="input-group-text"><Search size={14} /></span>
+                  <input className="form-control" placeholder="Buscar producto..."
+                    value={busqueda} onChange={e => setBusqueda(e.target.value)} />
+                </div>
               </div>
-              <div className="d-flex flex-column gap-2">
-                {filtrados.map(p => (
-                  <div key={p.id}
-                    className="d-flex justify-content-between align-items-center p-2 border rounded"
-                    style={{ opacity: p.stock === 0 ? 0.5 : 1 }}>
-                    <div>
-                      <p className="mb-0 fw-medium" style={{ fontSize: 13 }}>{p.nombre}</p>
-                      <p className="mb-0 text-muted" style={{ fontSize: 11 }}>
-                        Stock: {p.stock} · {p.categoria_nombre}
-                      </p>
+
+              {/* Lista con scroll */}
+              <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                <div className="d-flex flex-column gap-2 pb-2">
+                  {filtrados.map(p => (
+                    <div key={p.id}
+                      className="d-flex justify-content-between align-items-center p-2 border rounded"
+                      style={{ opacity: p.stock === 0 ? 0.5 : 1 }}>
+                      <div className="text-start">
+                        <p className="mb-0 fw-medium text-start" style={{ fontSize: 13 }}>
+                          {p.nombre}
+                        </p>
+                        <p className="mb-0 text-muted text-start" style={{ fontSize: 11 }}>
+                          Stock: {p.stock} · {p.categoria_nombre}
+                        </p>
+                      </div>
+                      <div className="d-flex align-items-center gap-2" style={{ flexShrink: 0 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: '#7b9cff' }}>
+                          ${Number(p.precio).toFixed(2)}
+                        </span>
+                        <button className="btn btn-dark btn-sm rounded-circle"
+                          style={{ width: 28, height: 28, padding: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                          onClick={() => agregar(p)}
+                          disabled={p.stock === 0}>
+                          <Plus size={14} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="d-flex align-items-center gap-2">
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#7b9cff' }}>
-                        ${Number(p.precio).toFixed(2)}
-                      </span>
-                      <button className="btn btn-dark btn-sm rounded-circle"
-                        style={{ width: 28, height: 28, padding: 0,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        onClick={() => agregar(p)} disabled={p.stock === 0}>
-                        <Plus size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+
+                  {filtrados.length === 0 && (
+                    <p className="text-muted small text-center py-4">
+                      No se encontraron productos
+                    </p>
+                  )}
+                </div>
               </div>
+
             </div>
           </div>
         </div>
