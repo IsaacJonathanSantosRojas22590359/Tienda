@@ -41,7 +41,7 @@ services:
     build:
       context: .
       args:
-        VITE_API_URL: http://162.243.170.69/api
+        VITE_API_URL: http://157.230.200.125/api
     container_name: tienda-frontend
     restart: always
     ports:
