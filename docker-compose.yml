@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mariadb:10.11
+    container_name: tienda-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: tienda
+      MYSQL_USER: tienda_user
+      MYSQL_PASSWORD: tienda_pass
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./tienda-backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./tienda-backend
+    container_name: tienda-backend
+    restart: always
+    environment:
+      SECRET_KEY: clave-secreta-produccion-tienda-2026
+      DEBUG: "False"
+      DB_NAME: tienda
+      DB_USER: tienda_user
+      DB_PASSWORD: tienda_pass
+      DB_HOST: db
+      DB_PORT: "3306"
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      args:
+        VITE_API_URL: http://162.243.170.69/api
+    container_name: tienda-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
