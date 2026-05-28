@@ -23,7 +23,7 @@ export default function Ventas() {
 
   useEffect(() => {
     cliente.get('/productos/')
-      .then(res => setProductos(res.data.results ?? res.data))
+      .then(res => setProductos(res.data ?? res.data))
       .catch(()  => toast.error('Error al cargar productos'))
       .finally(() => setLoading(false))
   }, [])
@@ -76,7 +76,7 @@ export default function Ventas() {
       toast.success('¡Venta registrada exitosamente!')
       // Recargar productos para actualizar stock
       const prodRes = await cliente.get('/productos/')
-      setProductos(prodRes.data.results ?? prodRes.data)
+      setProductos(prodRes.data)
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Error al registrar la venta')
     } finally {

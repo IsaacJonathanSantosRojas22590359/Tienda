@@ -26,7 +26,7 @@ def listar_categorias(payload: dict = Depends(verificar_token)):
     cursor.execute('SELECT * FROM categorias ORDER BY nombre')
     categorias = cursor.fetchall()
     cursor.close(); conn.close()
-    return {'count': len(categorias), 'results': categorias}
+    return categorias
 
 @router.post('/categorias/')
 def crear_categoria(data: CategoriaInput, payload: dict = Depends(solo_admin)):

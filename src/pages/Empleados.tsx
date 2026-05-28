@@ -20,7 +20,7 @@ export default function Empleados() {
   const cargar = () => {
     setLoading(true)
     cliente.get('/usuarios/')
-      .then(res => setEmpleados(Array.isArray(res.data) ? res.data : res.data.results))
+      .then(res => setEmpleados(Array.isArray(res.data) ? res.data : res.data))
       .catch(()  => toast.error('Error al cargar empleados'))
       .finally(() => setLoading(false))
   }

@@ -52,7 +52,7 @@ def listar_ventas(payload: dict = Depends(verificar_token)):
             d['subtotal']        = float(d['subtotal'])
         v['detalles'] = detalles
     cursor.close(); conn.close()
-    return {'count': len(ventas), 'results': ventas}
+    return ventas
 
 # ── Registrar venta ──────────────────────────────────────────
 @router.post('/ventas/')
