@@ -19,7 +19,9 @@ services:
       retries: 10
 
   backend:
-    build: ./tienda-backend
+    build:
+      context: ./tienda-backend
+      dockerfile: Dockerfile
     container_name: tienda-backend
     restart: always
     environment:
@@ -38,6 +40,7 @@ services:
   frontend:
     build:
       context: .
+      dockerfile: Dockerfile
       args:
         VITE_API_URL: http://104.198.161.171/api
     container_name: tienda-frontend
