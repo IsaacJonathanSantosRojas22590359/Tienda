@@ -41,7 +41,7 @@ export default function Productos() {
       cliente.get('/productos/'),
       cliente.get('/categorias/'),
     ]).then(([prodRes, catRes]) => {
-      setProductos(catRes.data)
+      setProductos(prodRes.data)
       setCategorias(catRes.data)
     }).catch(() => toast.error('Error al cargar productos'))
       .finally(() => setLoading(false))

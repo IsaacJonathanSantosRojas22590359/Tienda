@@ -23,7 +23,7 @@ export default function Ventas() {
 
   useEffect(() => {
     cliente.get('/productos/')
-      .then(res => setProductos(res.data ?? res.data))
+      .then(res => setProductos(res.data))
       .catch(()  => toast.error('Error al cargar productos'))
       .finally(() => setLoading(false))
   }, [])
