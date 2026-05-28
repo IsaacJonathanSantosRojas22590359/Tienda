@@ -177,84 +177,160 @@ def ticket_pdf(venta_id: int, payload: dict = Depends(verificar_token)):
     detalles = cursor.fetchall()
     cursor.close(); conn.close()
 
+    from reportlab.lib.enums import TA_CENTER
+    from reportlab.lib.styles import ParagraphStyle
+
     buffer = io.BytesIO()
-    doc    = SimpleDocTemplate(buffer, pagesize=(3.15*inch, 8*inch),
-                               topMargin=0.3*inch, bottomMargin=0.3*inch,
-                               leftMargin=0.2*inch, rightMargin=0.2*inch)
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=(2.83*inch, 8*inch),
+        topMargin=.2*inch,
+        bottomMargin=0.2*inch,
+        leftMargin=0.15*inch,
+        rightMargin=0.15*inch,
+    )
     styles = getSampleStyleSheet()
     story  = []
 
-    story.append(Paragraph('<b>TIENDA FAMILIAR</b>', styles['Title']))
-    story.append(Spacer(1, 0.05*inch))
-    story.append(Paragraph('Sistema de gestión de tienda', styles['Normal']))
-    story.append(Spacer(1, 0.1*inch))
-    story.append(Table([['─' * 32]], colWidths=[2.75*inch]))
-    story.append(Spacer(1, 0.1*inch))
+    color_principal = colors.HexColor('#1a1a1a')
+    color_linea     = colors.HexColor('#333333')
 
-    fecha_str = str(venta['fecha'])[:16]
+    fecha_str        = str(venta['fecha'])[:16]
+    empleado_mayus   = venta['empleado'].upper()
+    metodo_pago_mayus = venta['metodo_pago'].upper()
+
+    # Encabezado
+    story.append(Paragraph(
+        '<font size="12" face="Courier"><b>TIENDA EL MEZQUITE</b></font>',
+        ParagraphStyle('CenteredTitle', alignment=TA_CENTER, fontName='Courier-Bold', fontSize=12)
+    ))
+    story.append(Spacer(1, 0.03*inch))
+    story.append(Paragraph(
+        '<font size="5" face="Courier">Sistema de gestión de tienda</font>',
+        ParagraphStyle('CenteredSubtitle', alignment=TA_CENTER, fontName='Courier', fontSize=5)
+    ))
+    story.append(Spacer(1, 0.05*inch))
+    story.append(Paragraph(
+        '<font size="6" face="Courier">' + '·' * 47 + '</font>',
+        styles['Normal']
+    ))
+    story.append(Spacer(1, 0.08*inch))
+
+    # Datos del ticket
     info_data = [
-        ['Ticket #:', str(venta['id'])],
-        ['Fecha:',    fecha_str],
-        ['Atendió:',  venta['empleado']],
-        ['Método:',   venta['metodo_pago'].capitalize()],
+        ['TICKET:', str(venta['id'])],
+        ['FECHA:',  fecha_str],
+        ['ATENDIÓ:', empleado_mayus],
+        ['PAGO:',   metodo_pago_mayus],
     ]
-    t_info = Table(info_data, colWidths=[1.1*inch, 1.65*inch])
+    t_info = Table(info_data, colWidths=[0.8*inch, 1.7*inch])
     t_info.setStyle(TableStyle([
-        ('FONTSIZE',      (0,0), (-1,-1), 8),
-        ('FONTNAME',      (0,0), (0,-1),  'Helvetica-Bold'),
-        ('TOPPADDING',    (0,0), (-1,-1), 2),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+        ('FONTNAME',       (0,0), (-1,-1), 'Courier-Bold'),
+        ('FONTSIZE',       (0,0), (-1,-1), 7),
+        ('TEXTCOLOR',      (0,0), (-1,-1), color_principal),
+        ('TOPPADDING',     (0,0), (-1,-1), 1),
+        ('BOTTOMPADDING',  (0,0), (-1,-1), 1),
+        ('LEFTPADDING',    (0,0), (-1,-1), 0),
+        ('RIGHTPADDING',   (0,0), (-1,-1), 0),
     ]))
     story.append(t_info)
-    story.append(Spacer(1, 0.1*inch))
-    story.append(Table([['─' * 32]], colWidths=[2.75*inch]))
+    story.append(Spacer(1, 0.08*inch))
+    story.append(Paragraph(
+        '<font size="6" face="Courier">' + '·' * 47 + '</font>',
+        styles['Normal']
+    ))
     story.append(Spacer(1, 0.08*inch))
 
-    prod_data = [['Producto', 'Cant.', 'P.Unit', 'Sub']]
+    # Productos
+    story.append(Paragraph(
+        '<font size="9" face="Courier"><b>---------- PRODUCTOS ----------</b></font>',
+        ParagraphStyle('CenteredProducts', alignment=TA_CENTER, fontName='Courier-Bold', fontSize=9)
+    ))
+    story.append(Spacer(1, 0.05*inch))
+
+    prod_data = []
     for d in detalles:
+        nombre   = d['nombre'][:20]
+        cantidad = str(d['cantidad']).rjust(3)
+        precio   = f"${float(d['precio_unitario']):,.2f}".rjust(8)
+        subtotal = f"${float(d['subtotal']):,.2f}".rjust(8)
         prod_data.append([
-            d['nombre'][:18], str(d['cantidad']),
-            f"${float(d['precio_unitario']):.2f}",
-            f"${float(d['subtotal']):.2f}",
+            Paragraph(f'<font size="6" face="Courier">{nombre}</font>', styles['Normal']),
+            Paragraph(f'<font size="6" face="Courier"></font>', styles['Normal']),
+            Paragraph(f'<font size="6" face="Courier">{cantidad} x {precio}</font>', styles['Normal']),
+            Paragraph(f'<font size="6" face="Courier">{subtotal}</font>', styles['Normal']),
         ])
-    t_prod = Table(prod_data, colWidths=[1.1*inch, 0.4*inch, 0.65*inch, 0.6*inch])
+
+    t_prod = Table(prod_data, colWidths=[1*inch, 0.15*inch, 0.7*inch, 0.5*inch])
     t_prod.setStyle(TableStyle([
-        ('FONTSIZE',       (0,0),  (-1,-1), 7),
-        ('FONTNAME',       (0,0),  (-1,0),  'Helvetica-Bold'),
-        ('BACKGROUND',     (0,0),  (-1,0),  colors.HexColor('#1e2a3a')),
-        ('TEXTCOLOR',      (0,0),  (-1,0),  colors.white),
-        ('ALIGN',          (1,0),  (-1,-1), 'CENTER'),
-        ('ROWBACKGROUNDS', (0,1),  (-1,-1), [colors.HexColor('#f0f4ff'), colors.white]),
-        ('GRID',           (0,0),  (-1,-1), 0.3, colors.HexColor('#e2e8f0')),
-        ('TOPPADDING',     (0,0),  (-1,-1), 3),
-        ('BOTTOMPADDING',  (0,0),  (-1,-1), 3),
+        ('FONTNAME',      (0,0), (-1,-1), 'Courier'),
+        ('TOPPADDING',    (0,0), (-1,-1), 1),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 1),
+        ('LEFTPADDING',   (0,0), (-1,-1), 0),
+        ('RIGHTPADDING',  (0,0), (-1,-1), 0),
+        ('ALIGN',         (2,0), (-1,-1), 'RIGHT'),
+        ('VALIGN',        (0,0), (-1,-1), 'MIDDLE'),
     ]))
     story.append(t_prod)
-    story.append(Spacer(1, 0.1*inch))
-    story.append(Table([['─' * 32]], colWidths=[2.75*inch]))
-    story.append(Spacer(1, 0.08*inch))
+    story.append(Spacer(1, 0.05*inch))
+    story.append(Paragraph(
+        '<font size="6" face="Courier">' + '·' * 47 + '</font>',
+        styles['Normal']
+    ))
+    story.append(Spacer(1, 0.05*inch))
 
-    t_total = Table([['TOTAL:', f"${float(venta['total']):.2f}"]], colWidths=[1.5*inch, 1.25*inch])
+    # Total
+    t_total = Table(
+        [['TOTAL:', f"${float(venta['total']):,.2f}"]],
+        colWidths=[0.8*inch, 1.7*inch]
+    )
     t_total.setStyle(TableStyle([
-        ('FONTSIZE',      (0,0), (-1,-1), 11),
-        ('FONTNAME',      (0,0), (-1,-1), 'Helvetica-Bold'),
+        ('FONTNAME',      (0,0), (-1,-1), 'Courier-Bold'),
+        ('FONTSIZE',      (0,0), (-1,-1), 10),
+        ('TEXTCOLOR',     (0,0), (-1,-1), color_principal),
+        ('ALIGN',         (0,0), (0,0),   'LEFT'),
         ('ALIGN',         (1,0), (1,0),   'RIGHT'),
-        ('TOPPADDING',    (0,0), (-1,-1), 4),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 4),
+        ('TOPPADDING',    (0,0), (-1,-1), 2),
+        ('BOTTOMPADDING', (0,0), (-1,-1), 2),
+        ('LEFTPADDING',   (0,0), (-1,-1), 0),
+        ('RIGHTPADDING',  (0,0), (-1,-1), 0),
+        ('LINEBELOW',     (0,0), (-1,0),  1, color_linea),
+        ('LINEABOVE',     (0,0), (-1,0),  1, color_linea),
     ]))
     story.append(t_total)
-    story.append(Spacer(1, 0.15*inch))
-    story.append(Table([['─' * 32]], colWidths=[2.75*inch]))
     story.append(Spacer(1, 0.1*inch))
     story.append(Paragraph(
-        '<font size=7>¡Gracias por su compra!<br/>'
-        'Conserve este ticket como comprobante.</font>',
+        '<font size="6" face="Courier">' + '·' * 47 + '</font>',
         styles['Normal']
     ))
+    story.append(Spacer(1, 0.08*inch))
+
+    # Pie
     story.append(Paragraph(
-        f'<font size=6>Generado: {datetime.now().strftime("%d/%m/%Y %H:%M")}</font>',
+        '<font size="8" face="Courier"><b>¡GRACIAS POR SU COMPRA!</b></font>',
+        ParagraphStyle('CenteredThanks', alignment=TA_CENTER, fontName='Courier-Bold', fontSize=8)
+    ))
+    story.append(Spacer(1, 0.03*inch))
+    story.append(Paragraph(
+        '<font size="6" face="Courier">Conserve este ticket como comprobante.</font>',
+        ParagraphStyle('CenteredMessage', alignment=TA_CENTER, fontName='Courier', fontSize=6)
+    ))
+    story.append(Spacer(1, 0.08*inch))
+    story.append(Paragraph(
+        f'<font size="7" face="Courier"><b>Atendió: {empleado_mayus}</b></font>',
         styles['Normal']
     ))
+    story.append(Spacer(1, 0.03*inch))
+    story.append(Paragraph(
+        f'<font size="7" face="Courier"><b>Ticket: {venta["id"]}</b></font>',
+        styles['Normal']
+    ))
+    story.append(Spacer(1, 0.05*inch))
+    story.append(Paragraph(
+        f'<font size="4" face="Courier">Generado: {datetime.now().strftime("%d/%m/%Y %H:%M")}</font>',
+        styles['Normal']
+    ))
+
     doc.build(story)
     buffer.seek(0)
     return StreamingResponse(buffer, media_type='application/pdf',
