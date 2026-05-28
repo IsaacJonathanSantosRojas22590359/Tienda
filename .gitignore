@@ -24,12 +24,11 @@ dist-ssr
 *.sln
 *.sw?
 
-# Backend — NO subir el entorno virtual ni archivos compilados
+# Backend
 tienda-backend/venv/
 tienda-backend/__pycache__/
 tienda-backend/**/__pycache__/
 tienda-backend/**/*.pyc
-tienda-backend/**/*.pyo
 tienda-backend/.env
 
 # Archivos sensibles
