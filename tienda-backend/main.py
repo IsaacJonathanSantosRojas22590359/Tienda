@@ -10,7 +10,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:5173', 'http://157.230.200.125'],
+    allow_origins=['http://localhost:5173', 'http://157.230.200.125', 'http://tiendamezquite.duckdns.org'],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
