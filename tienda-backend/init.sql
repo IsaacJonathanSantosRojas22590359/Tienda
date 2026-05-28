@@ -77,8 +77,12 @@ INSERT INTO categorias (nombre, descripcion) VALUES
   ('Lácteos',   'Leche, queso, yogurt y derivados');
 
 INSERT INTO usuarios (nombre, email, password_hash, rol) VALUES
-  ('Isaac Santos', 'admin@tienda.com',    'hash_aqui', 'admin'),
-  ('Juan Torres',  'empleado@tienda.com', 'hash_aqui', 'empleado');
+  ('Isaac Santos', 'admin@tienda.com',
+   '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',
+   'admin'),
+  ('Erick Santos',  'empleado@tienda.com',
+   '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92',
+   'empleado');
 
 INSERT INTO productos (nombre, precio, stock, descripcion, categoria_id) VALUES
   ('Coca-Cola 600ml',     18.00,  142, 'Refresco de cola botella PET',       1),
