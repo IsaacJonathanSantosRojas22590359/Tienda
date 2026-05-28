@@ -77,7 +77,7 @@ def listar_productos(payload: dict = Depends(verificar_token)):
     for p in productos:
         p['precio']     = float(p['precio'])
         p['updated_at'] = str(p['updated_at'])
-    return {'count': len(productos), 'results': productos}
+    return productos
 
 @router.post('/productos/')
 def crear_producto(data: ProductoInput, payload: dict = Depends(solo_admin)):
